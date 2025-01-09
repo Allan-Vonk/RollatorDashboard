@@ -14,6 +14,7 @@
             <a href="#">Services</a>
             <a href="#">Contact</a>
             <a href="#">File Upload</a>
+            <button id="open-overlay">Open Overlay</button>
         </div>
     </div>
     <div class="main-content">
@@ -21,11 +22,48 @@
             <h1>Header Text</h1>
         </header>
         <main>
-            <iframe src="http://localhost:1999" width="100%" height="600px" frameborder="0"></iframe>
+            <iframe id="jspaint-iframe" src="/jspaint/" width="100%" height="600px" frameborder="0"></iframe>
         </main>
         <footer>
             <p>Footer Text</p>
         </footer>
     </div>
+    <div class="waypoint-system">
+        <h2>Waypoint System</h2>
+        <div id="mirrored-text">No status available</div>
+        <ul id="saved-locations"></ul>
+    </div>
 </body>
+<script>
+    // JavaScript to handle overlay functionality
+    const iframe = document.getElementById('jspaint-iframe');
+    const savedLocationsList = document.getElementById('saved-locations');
+
+    function updateMirroredText() {
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        // Check if iframe content is loaded
+        if (iframeDocument) {
+            const statusText = iframeDocument.querySelector('.status-coordinates.status-field.inset-shallow');
+            const mirroredText = statusText && statusText.innerText.trim() !== "" ? statusText.innerText : 'No status available';
+            document.getElementById('mirrored-text').innerText = mirroredText;
+        } else {
+            document.getElementById('mirrored-text').innerText = 'Iframe not loaded';
+        }
+    }
+
+    // Set an interval to update the mirrored text every second
+    setInterval(updateMirroredText, 10); // Update every 1000 milliseconds (1 second)
+    // Add event listener for spacebar to save locations
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            const mirroredText = document.getElementById('mirrored-text').innerText;
+            if (mirroredText !== 'No status available' && mirroredText !== '') {
+                const listItem = document.createElement('li');
+                listItem.innerText = mirroredText; // Add mirrored text to the list
+                savedLocationsList.appendChild(listItem);
+            }
+        }
+    });
+</script>
 </html>
