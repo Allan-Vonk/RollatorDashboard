@@ -32,13 +32,53 @@
         <h2>Waypoint System</h2>
         <div id="mirrored-text">No status available</div>
         <ul id="saved-locations"></ul>
+        <button id="Generate">Generate distance maps</button>
     </div>
 </body>
 <script>
     // JavaScript to handle overlay functionality
     const iframe = document.getElementById('jspaint-iframe');
     const savedLocationsList = document.getElementById('saved-locations');
+    const generateButton = document.getElementById('Generate');
+    generateButton.addEventListener("click", generateDistanceMaps);
 
+    function generateDistanceMaps(){
+        console.log("Generating")
+        const listItems = document.querySelectorAll("#saved-locations li");
+        const dataToSend = Array.from(listItems).map(item => {
+
+            const name = item.querySelector("input").value.trim(); 
+            const coordinates = item.querySelector("span").innerText.trim();
+            return { name, coordinates };
+
+        });
+        if (dataToSend.length === 0) {
+            console.log("NO DATA TO SEND")
+            return;
+        }
+        console.log("Data to send:", dataToSend);
+        fetch("http://localhost:5000/saveRoute", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dataToSend)
+        
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("API Response:", data);
+            alert("Distance maps generated successfully!");
+        })
+        .catch(error => {
+            console.error("Error sending data:", error);
+            alert("Failed to generate distance maps. See console for details.");
+        });
+    }
     function updateMirroredText() {
         const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -54,16 +94,41 @@
 
     // Set an interval to update the mirrored text every second
     setInterval(updateMirroredText, 10); // Update every 1000 milliseconds (1 second)
-    // Add event listener for spacebar to save locations
+    // Add event listener for a key to save locations
     document.addEventListener('keydown', function(event) {
-        if (event.code === 'Space') {
+        if (event.code === 'KeyW') {
             const mirroredText = document.getElementById('mirrored-text').innerText;
             if (mirroredText !== 'No status available' && mirroredText !== '') {
-                const listItem = document.createElement('li');
-                listItem.innerText = mirroredText; // Add mirrored text to the list
-                savedLocationsList.appendChild(listItem);
-            }
+            const listItem = document.createElement('li');
+
+            // Create an input field for the name
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Enter name';
+            nameInput.style.marginRight = '10px';
+
+            const closeButton = document.createElement('button');
+            closeButton.innerText = '✖'; // Cross symbol for the close button
+            closeButton.style.marginLeft = '10px';
+            closeButton.style.cursor = 'pointer';
+
+            closeButton.addEventListener('click', function () {
+                savedLocationsList.removeChild(listItem);
+            });
+
+            // Create a span to display the coordinates
+            const coordsSpan = document.createElement('span');
+            coordsSpan.innerText = mirroredText;
+
+            
+
+            // Append the input and coordinates to the list item
+            listItem.appendChild(closeButton);
+            listItem.appendChild(nameInput);
+            listItem.appendChild(coordsSpan);
+            savedLocationsList.appendChild(listItem);
         }
-    });
+    }
+});
 </script>
 </html>
